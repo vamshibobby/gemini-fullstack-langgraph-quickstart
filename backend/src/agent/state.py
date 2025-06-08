@@ -21,6 +21,16 @@ class OverallState(TypedDict):
     max_research_loops: int
     research_loop_count: int
     reasoning_model: str
+    is_structured_query: bool
+    structured_data: dict
+    visualization_format: str
+    table_html: str
+    can_visualize: bool
+    visualization_type: str
+    chart_type: str
+    chart_spec: dict
+    chart_code: str
+    chart_image_url: str
 
 
 class ReflectionState(TypedDict):

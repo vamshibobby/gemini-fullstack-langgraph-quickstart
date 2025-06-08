@@ -7,6 +7,11 @@ import fastapi.exceptions
 # Define the FastAPI app
 app = FastAPI()
 
+# Mount static files for chart images
+charts_static_path = pathlib.Path(__file__).parent.parent.parent / "static" / "charts"
+charts_static_path.mkdir(parents=True, exist_ok=True)  # Create directory if it doesn't exist
+app.mount("/static", StaticFiles(directory=pathlib.Path(__file__).parent.parent.parent / "static"), name="static")
+
 
 def create_frontend_router(build_dir="../frontend/dist"):
     """Creates a router to serve the React frontend.

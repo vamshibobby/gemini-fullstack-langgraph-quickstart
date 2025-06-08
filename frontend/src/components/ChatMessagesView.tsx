@@ -186,6 +186,19 @@ const AiMessageBubble: React.FC<AiMessageBubbleProps> = ({
     isLastMessage && isOverallLoading ? liveActivity : historicalActivity;
   const isLiveActivityForThisBubble = isLastMessage && isOverallLoading;
 
+  // Check if content contains HTML (specifically our table HTML)
+  const messageContent = typeof message.content === "string" 
+    ? message.content 
+    : JSON.stringify(message.content);
+  
+  const isHtmlContent = messageContent.includes('<div style="margin: 20px 0; font-family:') || 
+                       messageContent.includes('<table') || 
+                       messageContent.includes('<html>');
+
+  // Check if this message has chart image URL in the content
+  const chartImageMatch = messageContent.match(/CHART_IMAGE_URL:\s*([^\s]+)/);
+  const chartImageUrl = chartImageMatch ? chartImageMatch[1] : null;
+
   return (
     <div className={`relative break-words flex flex-col`}>
       {activityForThisBubble && activityForThisBubble.length > 0 && (
@@ -196,19 +209,45 @@ const AiMessageBubble: React.FC<AiMessageBubbleProps> = ({
           />
         </div>
       )}
-      <ReactMarkdown components={mdComponents}>
-        {typeof message.content === "string"
-          ? message.content
-          : JSON.stringify(message.content)}
-      </ReactMarkdown>
+      
+      {isHtmlContent ? (
+        // Render HTML content directly
+        <div 
+          className="prose prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: messageContent }}
+        />
+      ) : (
+        // Render markdown content
+        <ReactMarkdown components={mdComponents}>
+          {messageContent}
+        </ReactMarkdown>
+      )}
+
+      {/* Display chart image if available */}
+      {chartImageUrl && (
+        <div className="mt-4 p-4 bg-neutral-800 rounded-lg border border-neutral-600">
+          <h4 className="text-neutral-200 mb-3 font-medium">Generated Visualization</h4>
+          <div className="flex justify-center">
+            <img 
+              src={`http://localhost:2024${chartImageUrl}`}
+              alt="Generated Chart" 
+              className="max-w-full h-auto rounded-lg shadow-lg border border-neutral-600"
+              style={{ maxHeight: '600px' }}
+              onError={(e) => {
+                console.error('Error loading chart image:', e);
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        </div>
+      )}
+      
       <Button
         variant="default"
-        className="cursor-pointer bg-neutral-700 border-neutral-600 text-neutral-300 self-end"
+        className="cursor-pointer bg-neutral-700 border-neutral-600 text-neutral-300 self-end mt-3"
         onClick={() =>
           handleCopy(
-            typeof message.content === "string"
-              ? message.content
-              : JSON.stringify(message.content),
+            messageContent,
             message.id!
           )
         }

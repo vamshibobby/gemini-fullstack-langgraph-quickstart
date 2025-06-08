@@ -27,14 +27,21 @@ export default function App() {
     assistantId: "agent",
     messagesKey: "messages",
     onFinish: (event: any) => {
-      console.log(event);
+      console.log("Stream finished:", event);
     },
     onUpdateEvent: (event: any) => {
       let processedEvent: ProcessedEvent | null = null;
-      if (event.generate_query) {
+      if (event.structured_data_check) {
+        processedEvent = {
+          title: "Checking Query Type",
+          data: event.structured_data_check.is_structured_query 
+            ? `Structured data query detected - Format: ${event.structured_data_check.suggested_format || 'table'}`
+            : "Non-structured query detected",
+        };
+      } else if (event.generate_query) {
         processedEvent = {
           title: "Generating Search Queries",
-          data: event.generate_query.query_list.join(", "),
+          data: event.generate_query.query_list ? event.generate_query.query_list.join(", ") : "Generating queries...",
         };
       } else if (event.web_research) {
         const sources = event.web_research.sources_gathered || [];
@@ -49,19 +56,52 @@ export default function App() {
             exampleLabels || "N/A"
           }.`,
         };
-      } else if (event.reflection) {
+      } else if (event.reflection_structured) {
         processedEvent = {
-          title: "Reflection",
-          data: event.reflection.is_sufficient
-            ? "Search successful, generating final answer."
-            : `Need more information, searching for ${event.reflection.follow_up_queries.join(
-                ", "
-              )}`,
+          title: "Analyzing Structured Data",
+          data: event.reflection_structured.is_sufficient
+            ? "Sufficient structured data found, creating visualization."
+            : `Need more structured data, searching for ${event.reflection_structured.follow_up_queries ? event.reflection_structured.follow_up_queries.join(", ") : "additional data"}`,
         };
-      } else if (event.finalize_answer) {
+      } else if (event.data_visualizer) {
         processedEvent = {
-          title: "Finalizing Answer",
-          data: "Composing and presenting the final answer.",
+          title: "Preparing Data Structure",
+          data: "Converting research findings into structured table format for analysis.",
+        };
+      } else if (event.visualization_feasibility) {
+        processedEvent = {
+          title: "Analyzing Visualization Options",
+          data: event.visualization_feasibility.can_visualize
+            ? `Can create ${event.visualization_feasibility.visualization_type} visualization`
+            : "Data not suitable for visualization",
+        };
+      } else if (event.chart_type_selector) {
+        processedEvent = {
+          title: "Selecting Chart Type",
+          data: `Best chart type: ${event.chart_type_selector.chart_type}`,
+        };
+      } else if (event.chart_framework) {
+        processedEvent = {
+          title: "Designing Chart Framework",
+          data: `Setting up axes and variables for ${event.chart_framework.chart_spec?.title || 'chart'}`,
+        };
+      } else if (event.code_generator) {
+        processedEvent = {
+          title: "Generating Visualization Code",
+          data: "Creating Python code for chart generation.",
+        };
+      } else if (event.chart_renderer) {
+        processedEvent = {
+          title: "Rendering Chart",
+          data: event.chart_renderer.chart_image_url 
+            ? "Chart successfully generated and saved"
+            : "Executing Python code to create visualization",
+        };
+        hasFinalizeEventOccurredRef.current = true;
+      } else if (event.non_structured_response) {
+        processedEvent = {
+          title: "Query Not Supported",
+          data: "This query is not suitable for structured data visualization.",
         };
         hasFinalizeEventOccurredRef.current = true;
       }
