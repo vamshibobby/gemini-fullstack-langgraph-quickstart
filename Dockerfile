@@ -14,7 +14,7 @@ RUN npm install
 COPY frontend/ ./
 
 # Build the frontend
-RUN npm run build
+RUN NODE_ENV=production npm run build
 
 # Stage 2: Python Backend
 FROM docker.io/langchain/langgraph-api:3.11
