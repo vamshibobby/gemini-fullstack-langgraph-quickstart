@@ -21,7 +21,7 @@ export default function App() {
     max_research_loops: number;
     reasoning_model: string;
   }>({
-    apiUrl: import.meta.env.PROD ? "/" : "http://localhost:2024",
+    apiUrl: import.meta.env.PROD ? "https://dataviz-gemini-poc.onrender.com" : "http://localhost:2024",
     assistantId: "agent",
     messagesKey: "messages",
     onFinish: (event: any) => {
